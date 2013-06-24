@@ -1274,7 +1274,7 @@ function headlines_scroll_handler(e) {
 
 		// set topmost child in the buffer as active
 		if (getInitParam("cdm_auto_catchup") == 1 &&
-				(!isCdmMode() || getInitParam("cdm_expanded"))) {
+				isCdmMode() && getInitParam("cdm_expanded")) {
 			var rows = $$("#headlines-frame > div[id*=RROW]");
 
 			for (var i = 0; i < rows.length; i++) {
@@ -1317,7 +1317,8 @@ function headlines_scroll_handler(e) {
 			updateFloatingTitle();
 		}
 
-		if (getInitParam("cdm_auto_catchup") == 1) {
+		if (getInitParam("cdm_auto_catchup") == 1 &&
+				isCdmMode() && getInitParam("cdm_expanded")) {
 
 			// let's get DOM some time to settle down
 			var ts = new Date().getTime();
@@ -2216,24 +2217,30 @@ function openSelectedAttachment(elem) {
 function updateFloatingTitle() {
 	try {
 		var hf = $("headlines-frame");
-		var child = $("RROW-" + _active_article_id);
 
-		if (child && child.offsetTop + child.offsetHeight > hf.scrollTop) {
+		var elems = $$("#headlines-frame > div[id*=RROW]");
 
-			var header = child.getElementsByClassName("cdmHeader")[0];
+		for (var i = 0; i < elems.length; i++) {
+			var child = elems[i];
 
-			if (child.id != $("floatingTitle").getAttribute("rowid")) {
-				$("floatingTitle").setAttribute("rowid", child.id);
-				$("floatingTitle").innerHTML = header.innerHTML;
+			if (child.offsetTop + child.offsetHeight > hf.scrollTop) {
+
+				var header = child.getElementsByClassName("cdmHeader")[0];
+
+				if (child.id != $("floatingTitle").getAttribute("rowid")) {
+					$("floatingTitle").setAttribute("rowid", child.id);
+					$("floatingTitle").innerHTML = header.innerHTML;
+				}
+
+				if (child.offsetTop < hf.scrollTop - header.offsetHeight - 100 &&
+						child.offsetTop + child.offsetHeight - hf.scrollTop > 100)
+					Element.show("floatingTitle");
+				else
+					Element.hide("floatingTitle");
+
+				break;
 			}
-
-			if (child.offsetTop < hf.scrollTop - header.offsetHeight - 100 &&
-					child.offsetTop + child.offsetHeight - hf.scrollTop > 100)
-				Element.show("floatingTitle");
-			else
-				Element.hide("floatingTitle");
 		}
-
 	} catch (e) {
 		exception_error("updateFloatingTitle", e);
 	}
